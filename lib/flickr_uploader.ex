@@ -1,16 +1,22 @@
 defmodule FlickrUploader do
   require HTTPoison
-  @api_key "0c7908a82895da73015e585632fe584b"
-  @secret "a74bfb483be673aa"
   @callback_url "http://localhost/"
   @request_token_url "https://www.flickr.com/services/oauth/request_token"
   @user_auth_url "https://www.flickr.com/services/oauth/authorize"
   @access_token_url "https://www.flickr.com/services/oauth/access_token"
   @upload_url "https:/www.flickr.com/services/upload/"
- 
+
+  defp api_key() do
+    Application.get_env(:flickr_uploader, :api_key)
+  end
+
+  defp secret() do
+    Application.get_env(:flickr_uploader, :secret)
+  end
+
   def main(args \\ []) do
     # 1. Getting a Request Token
-    creds = OAuther.credentials(consumer_key: @api_key, consumer_secret: @secret, method: :hmac_sha1)
+    creds = OAuther.credentials(consumer_key: api_key, consumer_secret: secret, method: :hmac_sha1)
     params = OAuther.sign("get", @request_token_url, [{"oauth_callback", @callback_url}], creds)
     {:ok, response} = HTTPoison.get(@request_token_url, [], [params: params])
     request_token = response.body
@@ -29,8 +35,8 @@ defmodule FlickrUploader do
 
     # 3. Exchange the Request Token for an Access Token
     creds2 = OAuther.credentials(
-      consumer_key: @api_key, 
-      consumer_secret: @secret, 
+      consumer_key: api_key, 
+      consumer_secret: secret, 
       method: :hmac_sha1, 
       token: oauth_token, 
       token_secret: oauth_token_secret)
